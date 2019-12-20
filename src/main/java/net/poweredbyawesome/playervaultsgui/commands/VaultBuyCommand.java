@@ -1,6 +1,5 @@
 package net.poweredbyawesome.playervaultsgui.commands;
 
-import com.drtshock.playervaults.vaultmanagement.VaultOperations;
 import net.poweredbyawesome.playervaultsgui.PlayerVaultsGUI;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
@@ -31,8 +30,8 @@ public class VaultBuyCommand implements CommandExecutor {
             p.sendMessage(ChatColor.RED + "No Permssion!");
             return false;
         }
-        if (StringUtils.isNumeric(vaultNum) && Integer.valueOf(vaultNum) <= plugin.getConfig().getConfigurationSection("vaults").getKeys(false).size()) {
-            if (!VaultOperations.checkPerms(p, Integer.valueOf(vaultNum)-1)) {
+        if (StringUtils.isNumeric(vaultNum) && Integer.parseInt(vaultNum) <= plugin.getConfig().getConfigurationSection("vaults").getKeys(false).size()) {
+            if (!plugin.getPlayerVaults().canOpenVault(p, Integer.parseInt(vaultNum) - 1)) {
                 p.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("messages.noVaultAccess").replace("<VAULTNUM>", String.valueOf(vaultNum))));
                 return false;
             }

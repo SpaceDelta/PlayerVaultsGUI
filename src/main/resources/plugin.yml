@@ -1,8 +1,8 @@
 name: PlayerVaultsGUI
 version: ${project.version}
 main: net.poweredbyawesome.playervaultsgui.PlayerVaultsGUI
-depend: [PlayerVaults, Vault]
-authors: [LaxWasHere]
+depend: [SDCore, Vault]
+authors: [LaxWasHere, Ellie]
 api-version: 1.13
 commands:
   pvbuy:

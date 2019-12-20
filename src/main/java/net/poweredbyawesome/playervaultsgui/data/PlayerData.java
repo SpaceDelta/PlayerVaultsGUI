@@ -39,21 +39,21 @@ public class PlayerData {
     }
 
     public void setVaultName(String vaultNumber, String vaultName) {
-        userData.set("vault."+vaultNumber+".name", vaultName);
+        userData.set("vault." + vaultNumber + ".name", vaultName);
         save();
     }
 
     public String getVaultName(String vaultNumber) {
-        return userData.getString("vault."+vaultNumber+".name");
+        return userData.getString("vault." + vaultNumber + ".name");
     }
 
     public void setVaultItem(String vaultNumber, String vaultItem) {
-        userData.set("vault."+vaultNumber+".item", vaultItem);
+        userData.set("vault." + vaultNumber + ".item", vaultItem);
         save();
     }
 
     public Material getVaultItem(String vaultNumber) {
-        return Material.getMaterial(userData.getString("vault."+vaultNumber+".item"));
+        return Material.getMaterial(userData.getString("vault." + vaultNumber + ".item"));
     }
 
     private void save() {

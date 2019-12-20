@@ -8,7 +8,7 @@ import org.bukkit.command.CommandSender;
 
 public class VaultReloadCommand implements CommandExecutor {
 
-    PlayerVaultsGUI playerVaultsGUI;
+    private PlayerVaultsGUI playerVaultsGUI;
 
     public VaultReloadCommand(PlayerVaultsGUI playerVaultsGUI) {
         this.playerVaultsGUI = playerVaultsGUI;
@@ -22,4 +22,5 @@ public class VaultReloadCommand implements CommandExecutor {
         }
         return false;
     }
+
 }

@@ -1,11 +1,6 @@
 package net.poweredbyawesome.playervaultsgui;
 
-import com.drtshock.playervaults.vaultmanagement.VaultOperations;
-import de.themoep.inventorygui.GuiElement;
-import de.themoep.inventorygui.GuiElementGroup;
-import de.themoep.inventorygui.GuiPageElement;
-import de.themoep.inventorygui.InventoryGui;
-import de.themoep.inventorygui.StaticGuiElement;
+import de.themoep.inventorygui.*;
 import net.poweredbyawesome.playervaultsgui.data.PlayerData;
 import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.Bukkit;
@@ -24,14 +19,25 @@ import java.util.UUID;
 
 public class WindowManager {
 
-    private Player p;
-    private PlayerVaultsGUI plugin;
-    PlayerData pd;
+    private final PlayerData pd;
+    private final Player p;
+    private final PlayerVaultsGUI plugin;
 
     public WindowManager(PlayerVaultsGUI pl, Player p) {
         this.plugin = pl;
         this.p = p;
         this.pd = new PlayerData(pl, p.getUniqueId().toString());
+    }
+
+    public static String colour(String string) {
+        return ChatColor.translateAlternateColorCodes('&', string);
+    }
+
+    public static List<String> colour(List<String> string) {
+        for (int i = 0; i < string.size(); i++) {
+            string.set(i, ChatColor.translateAlternateColorCodes('&', string.get(i)));
+        }
+        return string;
     }
 
     public void openVaultGUI() {
@@ -77,7 +83,6 @@ public class WindowManager {
         gui.show(p);
     }
 
-
     public void openPlayersGui(UUID uuid) {
         OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
         if (!offlinePlayer.hasPlayedBefore()) {
@@ -90,7 +95,7 @@ public class WindowManager {
         String[] filler = plugin.getConfig().getString("gui.fillitem").split(":");
 
         for (int vaultNum = 1; vaultNum <= 100; vaultNum++) {
-            boolean hasPerm = (Bukkit.getPlayer(uuid) == null) ? plugin.getPerms().playerHas(null, offlinePlayer,"playervaults.amount." + String.valueOf(vaultNum)) : Bukkit.getPlayer(uuid).hasPermission("playervaults.amount." + String.valueOf(vaultNum));
+            boolean hasPerm = (Bukkit.getPlayer(uuid) == null) ? plugin.getPerms().playerHas(null, offlinePlayer, "playervaults.amount." + String.valueOf(vaultNum)) : Bukkit.getPlayer(uuid).hasPermission("playervaults.amount." + String.valueOf(vaultNum));
             if (hasPerm) {
                 List<String> infos = new ArrayList<>();
                 infos.add(plugin.getConfig().getString("unlocked.name"));
@@ -115,7 +120,7 @@ public class WindowManager {
             }
         }
 
-        InventoryGui gui = new InventoryGui(plugin, p, "&b"+offlinePlayer.getName() + "'s &aVaults", buildMatrix(group.size()));
+        InventoryGui gui = new InventoryGui(plugin, p, "&b" + offlinePlayer.getName() + "'s &aVaults", buildMatrix(group.size()));
         gui.addElement(new GuiPageElement('b', new ItemStack(Material.COAL, 1), GuiPageElement.PageAction.PREVIOUS, "&cPREVIOUS"));
         gui.addElement(new GuiPageElement('f', new ItemStack(Material.COAL, 1, (short) 1), GuiPageElement.PageAction.NEXT, "&aNEXT"));
         gui.setFiller(new ItemStack(Material.valueOf(filler[0]), 1));
@@ -131,7 +136,7 @@ public class WindowManager {
         String[] locked = plugin.getConfig().getString("locked.item").split(":");
         if (!plugin.getConfig().getBoolean("disablePurchases")) {
             for (String finalVaultNum : plugin.getConfig().getConfigurationSection("vaults").getKeys(false)) {
-                if (VaultOperations.checkPerms(p, Integer.valueOf(finalVaultNum))) {
+                if (plugin.getPlayerVaults().canOpenVault(p, Integer.parseInt(finalVaultNum))) {
                     List<String> infos = new ArrayList<>();
                     infos.add(pd.getVaultName(finalVaultNum) != null ? pd.getVaultName(finalVaultNum) : plugin.getConfig().getString("unlocked.name"));
                     infos.addAll(replaceStrings(plugin.getConfig().getStringList("unlocked.lore"), finalVaultNum));
@@ -158,7 +163,7 @@ public class WindowManager {
                         group.addElement(new StaticGuiElement('x',
                                 new ItemStack(Material.valueOf(locked[0]), 1),
                                 click -> {
-                                    if (!VaultOperations.checkPerms(p, Integer.valueOf(finalVaultNum)-1)) {
+                                    if (!plugin.getPlayerVaults().canOpenVault(p, Integer.parseInt(finalVaultNum) - 1)) {
                                         p.sendMessage(colour(plugin.getConfig().getString("messages.noVaultAccess").replace("<VAULTNUM>", finalVaultNum)));
                                         return true;
                                     }
@@ -181,12 +186,12 @@ public class WindowManager {
             }
         } else { //Disabled purchases
             for (int vaultNum = 1; vaultNum <= 100; vaultNum++) {
-                if (VaultOperations.checkPerms(p, vaultNum)) {
+                if (plugin.getPlayerVaults().canOpenVault(p, vaultNum)) {
                     String finalVaultNum = String.valueOf(vaultNum);
                     List<String> infos = new ArrayList<>();
                     infos.add(pd.getVaultName(finalVaultNum) != null ? pd.getVaultName(finalVaultNum) : plugin.getConfig().getString("unlocked.name"));
                     infos.addAll(replaceStrings(plugin.getConfig().getStringList("unlocked.lore"), String.valueOf(vaultNum)));
-                     //TODO create button method
+                    //TODO create button method
                     group.addElement(new StaticGuiElement('x',
                             new ItemStack(pd.getVaultItem(finalVaultNum) != null ? pd.getVaultItem(finalVaultNum) : Material.valueOf(unlocked[0]), 1),
                             click -> createButton(finalVaultNum, click),
@@ -246,7 +251,7 @@ public class WindowManager {
         openPlayersGui(offlinePlayer.getUniqueId());
     }
 
-    public List replaceStrings(List<String> lore, String vaultNum) {
+    public List<String> replaceStrings(List<String> lore, String vaultNum) {
         for (int i = 0; i < lore.size(); i++) {
             lore.set(i, lore.get(i).replace("<COST>", String.valueOf(getCost(vaultNum))).replace("<VAULTNUM>", vaultNum));
         }
@@ -254,19 +259,8 @@ public class WindowManager {
     }
 
     public int getCost(String vaultNum) {
-        int cost = plugin.getConfig().getInt("vaults."+vaultNum+".cost");
+        int cost = plugin.getConfig().getInt("vaults." + vaultNum + ".cost");
         return (cost <= 0) ? plugin.getConfig().getInt("defaultcost") : cost;
-    }
-
-    public static String colour(String string) {
-        return ChatColor.translateAlternateColorCodes('&', string);
-    }
-
-    public static List colour(List<String> string) {
-        for (int i = 0; i < string.size(); i++) {
-            string.set(i, ChatColor.translateAlternateColorCodes('&', string.get(i)));
-        }
-        return string;
     }
 
     public String[] buildMatrix(int i) {

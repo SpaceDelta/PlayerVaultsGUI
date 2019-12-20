@@ -1,15 +1,12 @@
 package net.poweredbyawesome.playervaultsgui;
 
-import com.drtshock.playervaults.vaultmanagement.VaultHolder;
-import com.drtshock.playervaults.vaultmanagement.VaultOperations;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 import net.milkbowl.vault.permission.Permission;
-import net.poweredbyawesome.playervaultsgui.commands.VaultAdminCommand;
-import net.poweredbyawesome.playervaultsgui.commands.VaultBuyCommand;
-import net.poweredbyawesome.playervaultsgui.commands.VaultGiveCommand;
-import net.poweredbyawesome.playervaultsgui.commands.VaultGuiCommand;
-import net.poweredbyawesome.playervaultsgui.commands.VaultReloadCommand;
+import net.poweredbyawesome.playervaultsgui.commands.*;
+import net.spacedelta.sdcore.SDCore;
+import net.spacedelta.sdcore.module.impl.playervault.SDPlayerVaults;
+import net.spacedelta.sdcore.module.impl.playervault.event.PlayerVaultCloseEvent;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -18,7 +15,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -35,11 +31,20 @@ public final class PlayerVaultsGUI extends JavaPlugin implements Listener {
     private static Permission perms = null;
     public ItemStack menuItem = null;
 
+    private SDPlayerVaults playerVaults;
+
     @Override
     public void onEnable() {
         saveDefaultConfig();
         checkVault();
+        final SDCore sdCore = (SDCore) Bukkit.getPluginManager().getPlugin("SDCore");
+        if (!sdCore.getSDPlayerVaults().isEnabled()) {
+            throw new RuntimeException("player vaults module of SDCore not enabled");
+        }
+        this.playerVaults = sdCore.getSDPlayerVaults();
+
         Bukkit.getPluginManager().registerEvents(this, this);
+
         getCommand("pvbuy").setExecutor(new VaultBuyCommand(this));
         getCommand("pvgui").setExecutor(new VaultGuiCommand(this));
         getCommand("pvgive").setExecutor(new VaultGiveCommand(this));
@@ -47,6 +52,7 @@ public final class PlayerVaultsGUI extends JavaPlugin implements Listener {
         getCommand("pvadmin").setExecutor(new VaultAdminCommand(this));
         makeItem();
         startMetrics();
+
     }
 
     public void makeItem() {
@@ -84,7 +90,7 @@ public final class PlayerVaultsGUI extends JavaPlugin implements Listener {
                 ev.setCancelled(true);
                 if (getConfig().getBoolean("key.consume")) {
                     ItemStack itemStack = menuItem;
-                    itemStack.setAmount(ev.getPlayer().getItemInHand().getAmount() -1);
+                    itemStack.setAmount(ev.getPlayer().getItemInHand().getAmount() - 1);
                     ev.getPlayer().setItemInHand(itemStack);
                     ev.getPlayer().updateInventory();
                     ev.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('&', getConfig().getString("messages.consumeKey")));
@@ -95,11 +101,9 @@ public final class PlayerVaultsGUI extends JavaPlugin implements Listener {
     }
 
     @EventHandler
-    public void onClose(InventoryCloseEvent ev) {
-        if (ev.getInventory().getHolder() instanceof VaultHolder && getConfig().getBoolean("openOnVaultClose", false)) {
-            if (ev.getPlayer().hasPermission("playervaults.gui.open")) {
-                new WindowManager(this, (Player) ev.getPlayer()).openVaultGUI();
-            }
+    public void onVaultClose(PlayerVaultCloseEvent event) {
+        if (getConfig().getBoolean("openOnVaultClose", false) && event.getPlayer().hasPermission("playervaults.gui.open")) {
+            new WindowManager(this, event.getPlayer()).openVaultGUI();
         }
     }
 
@@ -131,32 +135,29 @@ public final class PlayerVaultsGUI extends JavaPlugin implements Listener {
     }
 
     public boolean chargeUser(Player p, String vaultNum) {
-        int cost = getConfig().getInt("vaults."+vaultNum+".cost");
+        int cost = getConfig().getInt("vaults." + vaultNum + ".cost");
         EconomyResponse e = econ.withdrawPlayer(p, (cost <= 0) ? getConfig().getInt("defaultcost") : cost);
         return e.transactionSuccess();
     }
 
     public boolean addPermission(Player p, String vaultNum) {
-        return perms.playerAdd(null, p, "playervaults.amount."+vaultNum);
+        return perms.playerAdd(null, p, "playervaults.amount." + vaultNum);
     }
 
     public boolean takePermission(Player p, String vaultNum) {
-        return perms.playerRemove(null, p, "playervaults.amount."+vaultNum);
-    }
-
-    /*
-    IDK if this method is in PVX but it probably should.
-     */
-    public int getMaxVaults(Player p) {
-        for (int vaultNum = 100; vaultNum >= 0; vaultNum--) {
-            if (VaultOperations.checkPerms(p, vaultNum))
-                return vaultNum;
-        }
-        return 0;
+        return perms.playerRemove(null, p, "playervaults.amount." + vaultNum);
     }
 
     public Permission getPerms() {
         return perms;
+    }
+
+    public SDPlayerVaults getPlayerVaults() {
+        return playerVaults;
+    }
+
+    public int getMaxVaults(Player player) {
+        return playerVaults.getMaxVaults(player);
     }
 
     public void startMetrics() {

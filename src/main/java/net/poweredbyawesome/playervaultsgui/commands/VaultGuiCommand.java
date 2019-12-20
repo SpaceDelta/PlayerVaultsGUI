@@ -9,7 +9,7 @@ import org.bukkit.entity.Player;
 
 public class VaultGuiCommand implements CommandExecutor {
 
-    PlayerVaultsGUI plugin;
+    private PlayerVaultsGUI plugin;
 
     public VaultGuiCommand(PlayerVaultsGUI playerVaultsGUI) {
         this.plugin = playerVaultsGUI;
@@ -22,4 +22,5 @@ public class VaultGuiCommand implements CommandExecutor {
         }
         return false;
     }
+    
 }

@@ -12,7 +12,7 @@ import org.bukkit.inventory.ItemStack;
 
 public class VaultGiveCommand implements CommandExecutor {
 
-    PlayerVaultsGUI plugin;
+    private PlayerVaultsGUI plugin;
 
     public VaultGiveCommand(PlayerVaultsGUI playerVaultsGUI) {
         this.plugin = playerVaultsGUI;
@@ -33,7 +33,7 @@ public class VaultGiveCommand implements CommandExecutor {
             Player p = Bukkit.getPlayer(args[0]);
             if (p != null && StringUtils.isNumeric(args[1])) {
                 ItemStack key = plugin.menuItem;
-                key.setAmount(Integer.valueOf(args[1]));
+                key.setAmount(Integer.parseInt(args[1]));
                 p.getInventory().addItem(key);
             } else {
                 sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&7[&bPV&7|&aGUI&7]&c Usage: /pvgive <Player> <Amount>"));
@@ -41,4 +41,5 @@ public class VaultGiveCommand implements CommandExecutor {
         }
         return false;
     }
+
 }

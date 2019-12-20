@@ -39,12 +39,12 @@ public class VaultAdminCommand implements CommandExecutor {
             int vaultTarget = Integer.parseInt(args[2]);
             int maxVault = plugin.getMaxVaults(p);
             if (args[0].equalsIgnoreCase("add")) {
-                plugin.addPermission(p, String.valueOf(maxVault+vaultTarget));
+                plugin.addPermission(p, String.valueOf(maxVault + vaultTarget));
                 sender.sendMessage(ChatColor.GREEN + String.format("Added %s vaults to %s", vaultTarget, p.getName()));
             }
 
             if (args[0].equalsIgnoreCase("take") && maxVault != 0) {
-                plugin.addPermission(p, String.valueOf(maxVault-vaultTarget));
+                plugin.addPermission(p, String.valueOf(maxVault - vaultTarget));
                 plugin.takePermission(p, String.valueOf(maxVault));
                 sender.sendMessage(ChatColor.GREEN + String.format("Taken %s vaults to %s", vaultTarget, p.getName()));
             }
