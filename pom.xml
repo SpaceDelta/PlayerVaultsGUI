@@ -5,8 +5,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>net.poweredbyawesome</groupId>
+    <version>1.0.0-SpaceDelta</version>
     <artifactId>PlayerVaultsGUI</artifactId>
-    <version>0.1.14-SpaceDelta</version>
     <packaging>jar</packaging>
 
     <name>PlayerVaultsGUI</name>
@@ -34,10 +34,10 @@
                 <version>3.0.0</version>
                 <configuration>
                     <relocations>
-                        <relocation>
-                            <pattern>org.bstats</pattern>
-                            <shadedPattern>net.poweredbyawesome.playervaultsgui</shadedPattern>
-                        </relocation>
+                        <relocate>
+                            <pattern>net.spacedelta.shared</pattern>
+                            <shadedPattern>net.spacedelta.pvgui.shared</shadedPattern>
+                        </relocate>
                         <relocation>
                             <pattern>de.themoep</pattern>
                             <shadedPattern>net.poweredbyawesome.playervaultsgui</shadedPattern>
@@ -64,8 +64,8 @@
 
     <repositories>
         <repository>
-            <id>spigotmc-repo</id>
-            <url>https://hub.spigotmc.org/nexus/content/groups/public/</url>
+            <id>spacedelta-maven</id>
+            <url>https://maven.spacedelta.net</url>
         </repository>
         <repository>
             <id>sonatype</id>
@@ -80,10 +80,6 @@
             <url>https://repo.minebench.de/</url>
         </repository>
         <repository>
-            <id>bstats-repo</id>
-            <url>https://repo.codemc.org/repository/maven-public</url>
-        </repository>
-        <repository>
             <id>wesjd-repo</id>
             <url>https://nexus.wesjd.net/repository/thirdparty/</url>
         </repository>
@@ -91,26 +87,21 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.spigotmc</groupId>
-            <artifactId>spigot-api</artifactId>
-            <version>1.14.4-R0.1-SNAPSHOT</version>
+            <groupId>com.tuinity</groupId>
+            <artifactId>tuinity-api</artifactId>
+            <version>1.15.2-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>net.milkbowl.vault</groupId>
             <artifactId>VaultAPI</artifactId>
-            <version>1.6</version>
+            <version>1.7</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>de.themoep</groupId>
             <artifactId>inventorygui</artifactId>
-            <version>1.3-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.bstats</groupId>
-            <artifactId>bstats-bukkit</artifactId>
-            <version>1.5</version>
+            <version>1.2-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>net.wesjd</groupId>
@@ -118,11 +109,23 @@
             <version>1.2.1-SNAPSHOT</version>
         </dependency>
         <dependency>
+            <groupId>net.spacedelta.shared</groupId>
+            <artifactId>util</artifactId>
+            <version>1.0.11</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.spacedelta.shared</groupId>
+            <artifactId>command</artifactId>
+            <version>1.0.6</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
             <groupId>net.spacedelta</groupId>
             <artifactId>sdcore</artifactId>
-            <version>1.38.4-SNAPSHOT</version>
+            <version>2-MC1.15-RELEASE</version>
             <scope>system</scope>
-            <systemPath>${basedir}/lib/SDCore-v1.38.4-SNAPSHOT.jar</systemPath>
+            <systemPath>${basedir}/lib/SDCore-v2-MC1.15-RELEASE.jar</systemPath>
         </dependency>
     </dependencies>
 </project>

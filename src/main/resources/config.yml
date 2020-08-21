@@ -1,8 +1,9 @@
 override-pv: false
 openOnVaultClose: false
 disablePurchases: false
-#List of available items: https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Material.html
+#List of available items: https/:/hub.spigotmc.org/javadocs/bukkit/org/bukkit/Material.html
 allowCustomization: false
+
 gui:
   name: "&f[&4Player Vaults Menu&f]"
   fillitem: "BLACK_STAINED_GLASS_PANE"
@@ -36,15 +37,24 @@ key:
     - "&7Hold and Right Click"
     - "&7[&aRight-Click To Open&7]"
     - "&c&m--------------------"
+
 messages:
-  buySuccess: "&aYou bought &7Vault #<VAULTNUM>"
-  noVaultAccess: "&cPlease buy the previous vault first!"
+  # SD Messages
+  # 0 = command label, 1 = command args, 2 = description
+  command-usage: '&7Correct Usage &a/{0} {1} &7- &b{2}'
+  # 0 = thing could not find.
+  not-found: '&cCould not find {0}.'
+  command-error: '&cError whilst executing this command ({0}). Please report to a member of staff'
+  # 0 = something, 1 = thing 0 is not.
+  invalid: '&c{0} is not a valid {1}'
+
+  # 0 = vault bought
+  buySuccess: "&aYou bought &7Vault #{0}"
+  noVaultAccess: "&cYou have to buy the previous Vault first!"
   vaultLocked: "&cThis vault is locked"
   consumeKey: "&aYou used a menu key"
   insufficientFunds: "&cInsufficient Funds!"
-  player404: "&cPlayer not found!"
-  item404: "&cInvalid Item!"
-  name404: "&cInvalid Name!"
+
 defaultcost: 10000
 defaultMatrix: true
 matrix:

@@ -1,45 +1,52 @@
 package net.poweredbyawesome.playervaultsgui.commands;
 
 import net.poweredbyawesome.playervaultsgui.PlayerVaultsGUI;
-import org.apache.commons.lang.StringUtils;
+import net.spacedelta.shared.command.Command;
+import net.spacedelta.shared.command.CommandBuilder;
+import net.spacedelta.shared.core.SDPlugin;
+import net.spacedelta.shared.util.UtilNumber;
 import org.bukkit.ChatColor;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-/**
- * Created by Lax on 1/3/2018.
- */
-public class VaultBuyCommand implements CommandExecutor {
+public class VaultBuyCommand extends Command {
 
-    private PlayerVaultsGUI plugin;
-
-    public VaultBuyCommand(PlayerVaultsGUI playerVaultsGUI) {
-        this.plugin = playerVaultsGUI;
+    public VaultBuyCommand(SDPlugin plugin) {
+        super(plugin, CommandBuilder.build("pvbuy")
+                .description("Buy a vault")
+                .permission("playervaults.gui.buy")
+                .usage("<vault number>")
+                .requirePlayer());
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (args.length == 0 || !(sender instanceof Player)) {
-            return false;
+    public void onCommand(CommandSender commandSender, String usedLabel, String[] args) {
+        Player player = (Player) commandSender;
+        Integer vaultNumber = UtilNumber.fromString(args[0]);
+        if (vaultNumber == null) {
+            usage(commandSender, usedLabel);
+            return;
         }
-        Player p = (Player) sender;
-        String vaultNum = args[0];
-        if (!p.hasPermission("playervaults.gui.buy")) {
-            p.sendMessage(ChatColor.RED + "No Permssion!");
-            return false;
-        }
-        if (StringUtils.isNumeric(vaultNum) && Integer.parseInt(vaultNum) <= plugin.getConfig().getConfigurationSection("vaults").getKeys(false).size()) {
-            if (!plugin.getPlayerVaults().canOpenVault(p, Integer.parseInt(vaultNum) - 1)) {
-                p.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("messages.noVaultAccess").replace("<VAULTNUM>", String.valueOf(vaultNum))));
-                return false;
+
+        PlayerVaultsGUI guiPlugin = (PlayerVaultsGUI) plugin;
+
+        if (vaultNumber <= plugin.getConfig().getConfigurationSection("vaults").getKeys(false).size()) {
+            if (guiPlugin.getPlayerVaults().canOpenVault(player, vaultNumber - 1)) {
+
+                if (((PlayerVaultsGUI) plugin).chargeUser(player, vaultNumber.toString())) {
+                    guiPlugin.addPermission(player, vaultNumber.toString());
+                    player.sendMessage(plugin.getMessage("buySuccess", vaultNumber));
+                    return;
+                }
+
+                player.sendMessage(plugin.getMessage("noVaultAccess", vaultNumber));
             }
-            if (plugin.chargeUser(p, vaultNum)) {
-                plugin.addPermission(p, vaultNum);
-                sender.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("messages.buySuccess").replace("<VAULTNUM>", String.valueOf(vaultNum))));
-            }
+
+        } else {
+            commandSender.sendMessage(ChatColor.RED + "You cannot buy that vault as it exceeds the limit");
         }
-        return false;
+
     }
+
+
 }

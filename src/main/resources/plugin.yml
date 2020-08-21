@@ -3,10 +3,8 @@ version: ${project.version}
 main: net.poweredbyawesome.playervaultsgui.PlayerVaultsGUI
 depend: [SDCore, Vault]
 authors: [LaxWasHere, Ellie]
-api-version: 1.13
+api-version: 1.15
+
 commands:
   pvbuy:
-  pvgui:
-  pvgive:
   pvguireload:
-  pvadmin:

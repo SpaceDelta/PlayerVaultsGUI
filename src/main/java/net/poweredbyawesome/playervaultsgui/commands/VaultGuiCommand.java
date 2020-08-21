@@ -2,25 +2,23 @@ package net.poweredbyawesome.playervaultsgui.commands;
 
 import net.poweredbyawesome.playervaultsgui.PlayerVaultsGUI;
 import net.poweredbyawesome.playervaultsgui.WindowManager;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
+import net.spacedelta.shared.command.Command;
+import net.spacedelta.shared.command.CommandBuilder;
+import net.spacedelta.shared.core.SDPlugin;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 
-public class VaultGuiCommand implements CommandExecutor {
+public class VaultGuiCommand extends Command {
 
-    private PlayerVaultsGUI plugin;
-
-    public VaultGuiCommand(PlayerVaultsGUI playerVaultsGUI) {
-        this.plugin = playerVaultsGUI;
+    public VaultGuiCommand(SDPlugin plugin) {
+        super(plugin, CommandBuilder.build("pvgui")
+                .description("Open Vault GUI")
+                .permission("playervaults.gui.open")
+                .requirePlayer());
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (sender.hasPermission("playervaults.gui.open") && sender instanceof Player) {
-            new WindowManager(plugin, (Player) sender).openVaultGUI();
-        }
-        return false;
+    public void onCommand(CommandSender sender, String label, String[] args) {
+        new WindowManager((PlayerVaultsGUI) plugin, asPlayer(sender)).openVaultGUI();
     }
-    
+
 }

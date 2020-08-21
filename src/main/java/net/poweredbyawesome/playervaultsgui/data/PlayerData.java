@@ -9,9 +9,8 @@ import java.io.File;
 
 public class PlayerData {
 
-    private PlayerVaultsGUI plugin;
-    private String playerUUID;
-    private File userFolder;
+    private final PlayerVaultsGUI plugin;
+    private final String playerUUID;
     private File userFile;
     private FileConfiguration userData;
 
@@ -22,7 +21,7 @@ public class PlayerData {
     }
 
     private void checkFile() {
-        userFolder = new File(plugin.getDataFolder(), "users");
+        File userFolder = new File(plugin.getDataFolder(), "users");
         userFile = new File(userFolder, playerUUID + ".yml");
         userData = new YamlConfiguration();
         try {

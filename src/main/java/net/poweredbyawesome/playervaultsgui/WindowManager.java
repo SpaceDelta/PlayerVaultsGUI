@@ -2,6 +2,7 @@ package net.poweredbyawesome.playervaultsgui;
 
 import de.themoep.inventorygui.*;
 import net.poweredbyawesome.playervaultsgui.data.PlayerData;
+import net.spacedelta.sdcore.util.ItemBuilder;
 import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -10,8 +11,6 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.SkullMeta;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,25 +28,13 @@ public class WindowManager {
         this.pd = new PlayerData(pl, p.getUniqueId().toString());
     }
 
-    public static String colour(String string) {
-        return ChatColor.translateAlternateColorCodes('&', string);
-    }
-
-    public static List<String> colour(List<String> string) {
-        for (int i = 0; i < string.size(); i++) {
-            string.set(i, ChatColor.translateAlternateColorCodes('&', string.get(i)));
-        }
-        return string;
-    }
-
     public void openVaultGUI() {
         GuiElementGroup group = buildGroup();
-        String[] filler = plugin.getConfig().getString("gui.fillitem").split(":");
 
         InventoryGui gui = new InventoryGui(plugin, p, plugin.getConfig().getString("gui.name"), buildMatrix(group.size()));
-        gui.addElement(new GuiPageElement('b', new ItemStack(Material.COAL, 1), GuiPageElement.PageAction.PREVIOUS, "&cPREVIOUS"));
-        gui.addElement(new GuiPageElement('f', new ItemStack(Material.CHARCOAL, 1), GuiPageElement.PageAction.NEXT, "&aNEXT"));
-        gui.setFiller(new ItemStack(Material.valueOf(filler[0]), 1));
+        gui.addElement(new GuiPageElement('b', new ItemStack(Material.COAL), GuiPageElement.PageAction.PREVIOUS, ChatColor.RED + "PREVIOUS"));
+        gui.addElement(new GuiPageElement('f', new ItemStack(Material.CHARCOAL), GuiPageElement.PageAction.NEXT, ChatColor.GREEN + "NEXT"));
+        gui.setFiller(new ItemStack(Material.valueOf(plugin.getConfig().getString("gui.fillitem")), 1));
         group.setFiller(gui.getFiller());
         gui.addElement(group);
         gui.show(p);
@@ -55,28 +42,27 @@ public class WindowManager {
 
     public void openPlayersWindow() {
         GuiElementGroup group = new GuiElementGroup('x');
-        String[] filler = plugin.getConfig().getString("gui.fillitem").split(":");
-        ItemStack skoole = new ItemStack(Material.PLAYER_HEAD, 1);
-        SkullMeta skullMeta = (SkullMeta) skoole.getItemMeta();
+        String filler = plugin.getConfig().getString("gui.fillitem");
+        ItemBuilder playerHead = new ItemBuilder(Material.PLAYER_HEAD);
+
         for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-            skullMeta.setOwningPlayer(onlinePlayer);
-            skoole.setItemMeta(skullMeta);
+            playerHead.asPlayerHead(onlinePlayer.getName());
             group.addElement(new StaticGuiElement('x',
-                    skoole,
+                    playerHead.build().clone(),
                     click -> {
                         p.closeInventory();
                         openPlayersGui(onlinePlayer.getUniqueId());
                         return true;
                     },
                     onlinePlayer.getDisplayName(),
-                    "&bOpen players' vault"
+                    ChatColor.AQUA + "Open players' vault"
             ));
         }
 
-        InventoryGui gui = new InventoryGui(plugin, p, "&cOnline&4Players", buildMatrix(group.size()));
-        gui.addElement(new GuiPageElement('b', new ItemStack(Material.COAL, 1), GuiPageElement.PageAction.PREVIOUS, "&cPREVIOUS"));
-        gui.addElement(new GuiPageElement('f', new ItemStack(Material.CHARCOAL, 1), GuiPageElement.PageAction.NEXT, "&aNEXT"));
-        gui.setFiller(new ItemStack(Material.valueOf(filler[0]), 1));
+        InventoryGui gui = new InventoryGui(plugin, p, ChatColor.RED + "Online Players", buildMatrix(group.size()));
+        gui.addElement(new GuiPageElement('b', new ItemStack(Material.COAL, 1), GuiPageElement.PageAction.PREVIOUS, ChatColor.RED + "PREVIOUS"));
+        gui.addElement(new GuiPageElement('f', new ItemStack(Material.COAL, (byte) 1), GuiPageElement.PageAction.NEXT, ChatColor.GREEN + "NEXT"));
+        gui.setFiller(new ItemStack(Material.valueOf(filler)));
         group.setFiller(gui.getFiller());
         gui.addElement(group);
 
@@ -86,31 +72,30 @@ public class WindowManager {
     public void openPlayersGui(UUID uuid) {
         OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
         if (!offlinePlayer.hasPlayedBefore()) {
-            p.sendMessage(colour(plugin.getConfig().getString("messages.player404", "&cPlayer not found!")));
+            p.sendMessage(plugin.getMessage("not-found", "that player"));
             return;
         }
+
         GuiElementGroup group = new GuiElementGroup('x');
-        String[] unlocked = plugin.getConfig().getString("unlocked.item").split(":");
-        String[] locked = plugin.getConfig().getString("locked.item").split(":");
-        String[] filler = plugin.getConfig().getString("gui.fillitem").split(":");
+        String unlocked = plugin.getConfig().getString("unlocked.item");
+        String locked = plugin.getConfig().getString("locked.item");
+        String filler = plugin.getConfig().getString("gui.fillitem");
 
         for (int vaultNum = 1; vaultNum <= 100; vaultNum++) {
-            boolean hasPerm = (Bukkit.getPlayer(uuid) == null) ? plugin.getPerms().playerHas(null, offlinePlayer, "playervaults.amount." + String.valueOf(vaultNum)) : Bukkit.getPlayer(uuid).hasPermission("playervaults.amount." + String.valueOf(vaultNum));
+            boolean hasPerm = (Bukkit.getPlayer(uuid) == null)
+                    ? plugin.getPerms().playerHas(null, offlinePlayer, "playervaults.amount." + vaultNum)
+                    : Bukkit.getPlayer(uuid).hasPermission("playervaults.amount." + vaultNum);
+
             if (hasPerm) {
                 List<String> infos = new ArrayList<>();
                 infos.add(plugin.getConfig().getString("unlocked.name"));
                 infos.addAll(replaceStrings(plugin.getConfig().getStringList("unlocked.lore"), String.valueOf(vaultNum)));
                 int finalVaultNum = vaultNum; //java so picky
                 group.addElement(new StaticGuiElement('x',
-                        new ItemStack(Material.valueOf(unlocked[0]), 1),
+                        new ItemStack(Material.valueOf(unlocked)),
                         click -> {
                             p.closeInventory();
-                            new BukkitRunnable() {
-                                @Override
-                                public void run() {
-                                    p.performCommand("pv " + offlinePlayer.getName() + " " + finalVaultNum);
-                                }
-                            }.runTaskLater(plugin, 20);
+                            plugin.runTaskLater(() -> p.performCommand("playervault " + offlinePlayer.getName() + " " + finalVaultNum), 5L);
                             return true;
                         },
                         infos.toArray((new String[0]))
@@ -120,17 +105,18 @@ public class WindowManager {
             }
         }
 
-        InventoryGui gui = new InventoryGui(plugin, p, "&b" + offlinePlayer.getName() + "'s &aVaults", buildMatrix(group.size()));
-        gui.addElement(new GuiPageElement('b', new ItemStack(Material.COAL, 1), GuiPageElement.PageAction.PREVIOUS, "&cPREVIOUS"));
-        gui.addElement(new GuiPageElement('f', new ItemStack(Material.COAL, 1, (short) 1), GuiPageElement.PageAction.NEXT, "&aNEXT"));
-        gui.setFiller(new ItemStack(Material.valueOf(filler[0]), 1));
+        InventoryGui gui = new InventoryGui(plugin, p,
+                ChatColor.AQUA + offlinePlayer.getName() + "'s " + ChatColor.GREEN + " Vaults", buildMatrix(group.size()));
+        gui.addElement(new GuiPageElement('b', new ItemStack(Material.COAL), GuiPageElement.PageAction.PREVIOUS, ChatColor.RED + "PREVIOUS"));
+        gui.addElement(new GuiPageElement('f', new ItemStack(Material.CHARCOAL), GuiPageElement.PageAction.NEXT, ChatColor.GREEN + "NEXT"));
+        gui.setFiller(new ItemStack(Material.valueOf(filler)));
         group.setFiller(gui.getFiller());
         gui.addElement(group);
 
         gui.show(p);
     }
 
-    public GuiElementGroup buildGroup() { //TODO: Cleanup
+    public GuiElementGroup buildGroup() { //TODO: Cleanup :(!
         GuiElementGroup group = new GuiElementGroup('x');
         String[] unlocked = plugin.getConfig().getString("unlocked.item").split(":");
         String[] locked = plugin.getConfig().getString("locked.item").split(":");
@@ -154,7 +140,7 @@ public class WindowManager {
                         group.addElement(new StaticGuiElement('x',
                                 new ItemStack(Material.valueOf(locked[0]), 1),
                                 click -> {
-                                    p.sendMessage(colour(plugin.getConfig().getString("messages.vaultLocked").replace("<VAULTNUM>", finalVaultNum)));
+                                    p.sendMessage(plugin.getMessage("vaultLocked", finalVaultNum));
                                     return true;
                                 },
                                 infos.toArray((new String[0]))
@@ -164,18 +150,19 @@ public class WindowManager {
                                 new ItemStack(Material.valueOf(locked[0]), 1),
                                 click -> {
                                     if (!plugin.getPlayerVaults().canOpenVault(p, Integer.parseInt(finalVaultNum) - 1)) {
-                                        p.sendMessage(colour(plugin.getConfig().getString("messages.noVaultAccess").replace("<VAULTNUM>", finalVaultNum)));
+                                        p.sendMessage(plugin.getMessage("noVaultAccess", finalVaultNum));
                                         return true;
                                     }
                                     if (plugin.chargeUser(p, finalVaultNum)) {
-                                        p.sendMessage(colour(plugin.getConfig().getString("messages.buySuccess").replace("<VAULTNUM>", finalVaultNum)));
+                                        p.sendMessage(plugin.getMessage("buySuccess", finalVaultNum));
+
                                         if (plugin.addPermission(p, finalVaultNum)) {
                                             p.closeInventory();
                                             //wait for permissions to update first.
-                                            Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, this::openVaultGUI, 15);
+                                            plugin.runAsyncLater(this::openVaultGUI, 15);
                                         }
                                     } else {
-                                        p.sendMessage(colour(plugin.getConfig().getString("messages.insufficientFunds")));
+                                        p.sendMessage(plugin.getMessage("insufficientFunds"));
                                     }
                                     return true;
                                 },
@@ -209,13 +196,9 @@ public class WindowManager {
         p.closeInventory();
         ClickType type = click.getType();
         if (type.isLeftClick()) {
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    p.performCommand("pv " + finalVaultNum);
-                }
-            }.runTaskLater(plugin, 15);
+            plugin.runTaskLater(() -> p.performCommand("playervault " + finalVaultNum), 5L);
         }
+
         if (plugin.getConfig().getBoolean("allowCustomization") && p.hasPermission("playervaults.gui.customize")) {
             if (type.name().equals("MIDDLE")) {
                 new AnvilGUI(plugin, p, "Enter Vault Name", (player, reply) -> {
@@ -224,7 +207,8 @@ public class WindowManager {
                         refresh();
                         return null;
                     }
-                    p.sendMessage(colour(plugin.getConfig().getString("messages.name404")));
+
+                    p.sendMessage(plugin.getMessage("invalid", reply, "Name"));
                     return "Invalid Name";
                 });
             }
@@ -235,7 +219,8 @@ public class WindowManager {
                         refresh();
                         return null;
                     }
-                    p.sendMessage(colour(plugin.getConfig().getString("messages.item404")));
+
+                    p.sendMessage(plugin.getMessage("invalid", reply, "Item"));
                     return "Invalid Name";
                 });
             }
